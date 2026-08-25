@@ -1,0 +1,30 @@
+# AI 相关文件
+.requirements/
+.claude/
+.agent/
+.agents/
+.codex/
+.mcp.json
+CLAUDE.md
+
+# 构建产物
+dist/
+dist-*/
+*-dist/
+coverage/
+.temp/
+.tmp/
+.cache/
+
+# 依赖
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+.history/
+.cursor/
+
+# 其他
+*.min.js
+*.min.css

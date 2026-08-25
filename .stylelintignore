@@ -6,3 +6,6 @@ coverage
 .claude
 .agent
 .agents
+.requirements
+.mcp.json
+CLAUDE.md
