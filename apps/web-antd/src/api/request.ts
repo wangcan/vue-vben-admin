@@ -21,6 +21,10 @@ import { refreshTokenApi } from './core';
 
 const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
 
+function formatToken(token: null | string) {
+  return token ? `Bearer ${token}` : null;
+}
+
 function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   const client = new RequestClient({
     ...options,
@@ -47,17 +51,15 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
 
   /**
    * 刷新token逻辑
+   * refreshTokenApi 返回原始 AxiosResponse，resp.data 为响应体
+   * { code, data: { access_token, ... } }
    */
   async function doRefreshToken() {
     const accessStore = useAccessStore();
     const resp = await refreshTokenApi();
-    const newToken = resp.data;
+    const newToken = resp.data?.data?.access_token ?? '';
     accessStore.setAccessToken(newToken);
     return newToken;
-  }
-
-  function formatToken(token: null | string) {
-    return token ? `Bearer ${token}` : null;
   }
 
   // 请求头处理
@@ -111,3 +113,13 @@ export const requestClient = createRequestClient(apiURL, {
 });
 
 export const baseRequestClient = new RequestClient({ baseURL: apiURL });
+
+// baseRequestClient 不经过响应拦截器（避免 refresh 触发 401 死循环），
+// 但需要携带鉴权头，否则 refreshTokenApi / logoutApi 会以匿名请求失败。
+baseRequestClient.addRequestInterceptor({
+  fulfilled: async (config) => {
+    const accessStore = useAccessStore();
+    config.headers.Authorization = formatToken(accessStore.accessToken);
+    return config;
+  },
+});

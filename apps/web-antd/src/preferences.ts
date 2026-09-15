@@ -18,7 +18,12 @@ interface WebAntdPreferencesExtension {
 export const overridesPreferences = defineOverridesPreferences({
   // overrides
   app: {
+    // 混合模式：保留前端静态路由（dashboard/demos 等）并叠加后端权限菜单树，
+    // 菜单与动态路由由后端 /auth/permission-info 驱动。
+    accessMode: 'mixed',
     name: import.meta.env.VITE_APP_TITLE,
+    // 启用 accessToken 自动刷新：401 时调用 /auth/refresh 黑名单旧 token 并续期。
+    enableRefreshToken: true,
   },
 });
 

@@ -8,7 +8,7 @@ import { preferences } from '@vben/preferences';
 
 import { message } from 'ant-design-vue';
 
-import { getAllMenusApi } from '#/api';
+import { fetchMenuListWithAccessInfo } from '#/api';
 import { BasicLayout, IFrameView } from '#/layouts';
 import { $t } from '#/locales';
 
@@ -29,7 +29,9 @@ async function generateAccess(options: GenerateMenuAndRoutesOptions) {
         content: `${$t('common.loadingMenu')}...`,
         duration: 1.5,
       });
-      return await getAllMenusApi();
+      // 拉取后端权限菜单树（/auth/permission-info），同时回填 accessCodes 与角色，
+      // 返回 RouteRecordStringComponent[] 供 generateRoutesByBackend 生成动态路由与菜单。
+      return await fetchMenuListWithAccessInfo();
     },
     // 可以指定没有权限跳转403页面
     forbiddenComponent,

@@ -1,5 +1,7 @@
 import type { Recordable, UserInfo } from '@vben/types';
 
+import type { AuthApi } from '#/api';
+
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -10,8 +12,28 @@ import { resetAllStores, useAccessStore, useUserStore } from '@vben/stores';
 import { notification } from 'ant-design-vue';
 import { defineStore } from 'pinia';
 
-import { getAccessCodesApi, getUserInfoApi, loginApi, logoutApi } from '#/api';
+import { getUserInfoApi, loginApi, logoutApi } from '#/api';
 import { $t } from '#/locales';
+
+/**
+ * 将登录接口返回的用户信息映射为前端使用的 UserInfo
+ * 登录接口会返回角色（roles）与权限码（permissions）
+ */
+function mapLoginUserToUserInfo(
+  user: AuthApi.LoginUser,
+  accessToken: string,
+): UserInfo {
+  return {
+    avatar: '',
+    desc: user.email ?? '',
+    homePath: '',
+    realName: user.name,
+    roles: user.roles ?? [],
+    token: accessToken,
+    userId: String(user.id),
+    username: user.name,
+  };
+}
 
 export const useAuthStore = defineStore('auth', () => {
   const accessStore = useAccessStore();
@@ -33,19 +55,16 @@ export const useAuthStore = defineStore('auth', () => {
     let userInfo: null | UserInfo = null;
     try {
       loginLoading.value = true;
-      const { accessToken } = await loginApi(params);
+      const loginResult = await loginApi(params);
+      const accessToken = loginResult?.access_token;
 
       // 如果成功获取到 accessToken
       if (accessToken) {
         accessStore.setAccessToken(accessToken);
 
-        // 获取用户信息并存储到 accessStore 中
-        const [fetchUserInfoResult, accessCodes] = await Promise.all([
-          fetchUserInfo(),
-          getAccessCodesApi(),
-        ]);
-
-        userInfo = fetchUserInfoResult;
+        // 后端登录接口已返回用户信息（含角色与权限码），直接使用，无需额外请求
+        userInfo = mapLoginUserToUserInfo(loginResult.user, accessToken);
+        const accessCodes = loginResult.user?.permissions ?? [];
 
         userStore.setUserInfo(userInfo);
         accessStore.setAccessCodes(accessCodes);

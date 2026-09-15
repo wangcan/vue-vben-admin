@@ -29,6 +29,11 @@ function useAccess() {
   function hasAccessByCodes(codes: string[]) {
     const userCodesSet = new Set(accessStore.accessCodes);
 
+    // 超级管理员拥有通配权限码 "*"，直接放行所有按钮级权限
+    if (userCodesSet.has('*')) {
+      return true;
+    }
+
     const intersection = codes.filter((item) => userCodesSet.has(item));
     return intersection.length > 0;
   }
