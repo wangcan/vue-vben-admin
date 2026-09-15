@@ -1,9 +1,9 @@
 import type { RouteRecordRaw } from 'vue-router';
 
-import { $t } from '#/locales';
+// import { $t } from '#/locales';
 
 const routes: RouteRecordRaw[] = [
-  {
+  /* {
     meta: {
       icon: 'ic:baseline-view-in-ar',
       keepAlive: true,
@@ -22,7 +22,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('#/views/demos/antd/index.vue'),
       },
     ],
-  },
+  },*/
 ];
 
 export default routes;
