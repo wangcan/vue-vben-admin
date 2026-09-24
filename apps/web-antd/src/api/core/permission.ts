@@ -148,3 +148,106 @@ export async function fetchMenuListWithAccessInfo(): Promise<
 
   return transformBackendMenusToRoutes(info.menus ?? []);
 }
+
+/**
+ * 权限分配 - 角色菜单 / 数据权限 / 用户角色 接口
+ * 后端接口前缀：/api/v1/user-center/permissions
+ * 接口文档：auth-role.doc 第 6 节
+ */
+export namespace PermissionAssignApi {
+  /** 数据范围：1=全部 2=自定义部门 3=本部门 4=本部门及以下 5=仅本人 */
+  export type DataScope = 1 | 2 | 3 | 4 | 5;
+
+  /** 角色菜单分配请求体 */
+  export interface AssignRoleMenuPayload {
+    /** menu_ids 留空或省略表示清空 */
+    menu_ids?: number[];
+    role_id: number;
+  }
+
+  /** 角色数据权限分配请求体 */
+  export interface AssignDataScopePayload {
+    /** 自定义部门 id（仅 data_scope=2 时需要） */
+    data_scope_dept_ids?: number[];
+    data_scope: DataScope | number;
+    role_id: number;
+  }
+
+  /** 用户角色分配请求体 */
+  export interface AssignUserRolePayload {
+    /** role_ids 留空或省略表示清空 */
+    role_ids?: number[];
+    user_id: number;
+  }
+}
+
+/** 数据范围选项（供下拉 / RadioGroup 使用） */
+export const dataScopeOptions: Array<{
+  label: string;
+  value: PermissionAssignApi.DataScope;
+}> = [
+  { label: '全部数据', value: 1 },
+  { label: '自定义部门', value: 2 },
+  { label: '本部门', value: 3 },
+  { label: '本部门及以下', value: 4 },
+  { label: '仅本人', value: 5 },
+];
+
+/**
+ * 获取角色已分配的菜单 id 列表
+ * 后端接口：GET /api/v1/user-center/permissions/role-menus?roleId=
+ */
+export async function getRoleMenuIds(roleId: number): Promise<number[]> {
+  return requestClient.get<number[]>('/v1/user-center/permissions/role-menus', {
+    params: { roleId },
+  });
+}
+
+/**
+ * 给角色分配菜单（全量同步）
+ * 后端接口：POST /api/v1/user-center/permissions/assign-role-menu
+ */
+export async function assignRoleMenus(
+  data: PermissionAssignApi.AssignRoleMenuPayload,
+) {
+  return requestClient.post(
+    '/v1/user-center/permissions/assign-role-menu',
+    data,
+  );
+}
+
+/**
+ * 给角色分配数据权限
+ * 后端接口：POST /api/v1/user-center/permissions/assign-role-data-scope
+ */
+export async function assignRoleDataScope(
+  data: PermissionAssignApi.AssignDataScopePayload,
+) {
+  return requestClient.post(
+    '/v1/user-center/permissions/assign-role-data-scope',
+    data,
+  );
+}
+
+/**
+ * 获取用户已分配的角色 id 列表
+ * 后端接口：GET /api/v1/user-center/permissions/user-roles?userId=
+ */
+export async function getUserRoleIds(userId: number): Promise<number[]> {
+  return requestClient.get<number[]>('/v1/user-center/permissions/user-roles', {
+    params: { userId },
+  });
+}
+
+/**
+ * 给用户分配角色（全量同步）
+ * 后端接口：POST /api/v1/user-center/permissions/assign-user-role
+ */
+export async function assignUserRoles(
+  data: PermissionAssignApi.AssignUserRolePayload,
+) {
+  return requestClient.post(
+    '/v1/user-center/permissions/assign-user-role',
+    data,
+  );
+}

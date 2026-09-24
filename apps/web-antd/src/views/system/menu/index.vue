@@ -1,48 +1,131 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
+import type {
+  OnActionClickParams,
+  VxeTableGridOptions,
+} from '#/adapter/vxe-table';
+import type { MenuApi } from '#/api';
 
-import { Page } from '@vben/common-ui';
+import { Page, useVbenModal } from '@vben/common-ui';
+import { IconifyIcon, Plus } from '@vben/icons';
 
-import { Alert, Button, Card, Space, Table } from 'ant-design-vue';
+import { Button, message } from 'ant-design-vue';
+
+import { useVbenVxeGrid } from '#/adapter/vxe-table';
+import { deleteMenu, getMenuList } from '#/api';
+import { $t } from '#/locales';
+
+import { useColumns } from './data';
+import Form from './modules/form.vue';
 
 defineOptions({ name: 'SystemMenu' });
 
-const dataSource = [
-  { id: 1, name: '系统管理', path: '/system', type: '目录' },
-  { id: 100, name: '用户管理', path: '/system/user', type: '菜单' },
-  { id: 1001, name: '用户查询', path: '', type: '按钮' },
-];
+const [FormModal, formModalApi] = useVbenModal({
+  connectedComponent: Form,
+  destroyOnClose: true,
+});
 
-const columns = computed(() => [
-  { title: 'ID', dataIndex: 'id', key: 'id' },
-  { title: '菜单名称', dataIndex: 'name', key: 'name' },
-  { title: '路由地址', dataIndex: 'path', key: 'path' },
-  { title: '类型', dataIndex: 'type', key: 'type' },
-]);
+const [Grid, gridApi] = useVbenVxeGrid({
+  gridOptions: {
+    columns: useColumns(onActionClick),
+    height: 'auto',
+    keepSource: true,
+    pagerConfig: {
+      enabled: false,
+    },
+    proxyConfig: {
+      ajax: {
+        query: async () => {
+          const menus = await getMenuList();
+          return { items: menus, total: menus.length };
+        },
+      },
+    },
+    rowConfig: {
+      keyField: 'id',
+    },
+    toolbarConfig: {
+      custom: true,
+      export: false,
+      refresh: true,
+      zoom: true,
+    },
+    treeConfig: {
+      parentField: 'parentId',
+      rowField: 'id',
+      transform: true,
+    },
+  } as VxeTableGridOptions<MenuApi.MenuItem>,
+});
+
+function onActionClick({ code, row }: OnActionClickParams<MenuApi.MenuItem>) {
+  switch (code) {
+    case 'delete': {
+      onDelete(row);
+      break;
+    }
+    case 'edit': {
+      onEdit(row);
+      break;
+    }
+  }
+}
+
+function onEdit(row: MenuApi.MenuItem) {
+  formModalApi.setData(row).open();
+}
+
+function onCreate() {
+  formModalApi.setData(null).open();
+}
+
+function onDelete(row: MenuApi.MenuItem) {
+  const hideLoading = message.loading({
+    content: $t('ui.actionMessage.deleting', [row.name]),
+    duration: 0,
+    key: 'action_process_msg',
+  });
+  deleteMenu(row.id)
+    .then(() => {
+      message.success({
+        content: $t('ui.actionMessage.deleteSuccess', [row.name]),
+        key: 'action_process_msg',
+      });
+      onRefresh();
+    })
+    .catch(() => {
+      hideLoading();
+    });
+}
+
+function onRefresh() {
+  gridApi.query();
+}
 </script>
 
 <template>
-  <Page
-    description="由后端权限菜单树动态生成的路由（/system/menu）"
-    title="菜单管理"
-  >
-    <Alert
-      class="mb-4"
-      message="本页为动态路由占位页，演示「菜单渲染 + 动态路由 + 按钮级权限」联动。"
-      type="info"
-      show-icon
-    />
-    <Card title="操作">
-      <Space>
-        <Button v-access:code="['system:menu:create']" type="primary">
+  <Page auto-content-height>
+    <FormModal @success="onRefresh" />
+    <Grid table-title="菜单列表">
+      <template #toolbar-tools>
+        <Button
+          v-access:code="['system:menu:create']"
+          type="primary"
+          @click="onCreate"
+        >
+          <Plus class="size-5" />
           新增菜单
         </Button>
-        <Button v-access:code="['system:menu:update']">编辑</Button>
-        <Button v-access:code="['system:menu:delete']" danger>删除</Button>
-      </Space>
-    </Card>
-    <Card class="mt-4" title="菜单列表">
-      <Table :columns="columns" :data-source="dataSource" row-key="id" />
-    </Card>
+      </template>
+      <template #name="{ row }">
+        <div class="flex items-center gap-1">
+          <IconifyIcon
+            v-if="row.icon"
+            :icon="row.icon"
+            class="size-4 shrink-0"
+          />
+          <span>{{ row.name }}</span>
+        </div>
+      </template>
+    </Grid>
   </Page>
 </template>

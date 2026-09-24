@@ -1,17 +1,9 @@
+需求：
+1. .requirements/develop/auth-role.doc
+   文件是用户认证、校色、权限等相关的后端接口文档，文档中{{host}} 替换为
+   http://49.235.53.53:9001，可以访问实际的后端接口；
+2. 接口系统管理相关的动态路由，结合接口文档实际的返回值，补充完善出完整的 用户、角色、权限管理功能。
 
-需求3：
-知识库人物管理
-相关后端接口文档：
-1. 人物分页列表接口：http://showdoc.canliang.wang/web/#/669266166/297761767
-2. 新建人物接口：http://showdoc.canliang.wang/web/#/669266166/297761768
-3. 下载人物导入模板接口：http://showdoc.canliang.wang/web/#/669266166/297761770
-4. Excel 批量导入人物接口：http://showdoc.canliang.wang/web/#/669266166/297761771
-5. 人物详情接口：http://showdoc.canliang.wang/web/#/669266166/297761772
-6. 修改人物接口：http://showdoc.canliang.wang/web/#/669266166/297761773
-7. 删除人物接口：http://showdoc.canliang.wang/web/#/669266166/297761774
-所有接口文档中 实际的接口前缀为：http://49.235.53.53:9001
-
-结合上述接口，完成动态路由 知识库/人物管理 的后台管理维护功能。
 
 忽略以下所有需求描述
 
